@@ -1,25 +1,30 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "../../lib/firebase";
-import Link from "next/link";
 import Image from "next/image";
-
-export default function LoginPage() {
+export default function ResetPasswordPage() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const router = useRouter();
+  const [message, setMessage] = useState(null);
+  const [error, setError] = useState(null);
 
-  async function handleLogin(e) {
+  const handlePasswordReset = async (e) => {
     e.preventDefault();
+    setMessage(null);
+    setError(null);
+
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      router.push("/");
-    } catch (error) {
-      console.error(error);
+      await sendPasswordResetEmail(auth, email);
+      setMessage(
+        "E-mail z linkiem do resetowania hasła został wysłany. Sprawdź swoją skrzynkę.",
+      );
+    } catch (err) {
+      console.error("Błąd resetowania hasła:", err);
+      setError(
+        "Nie udało się wysłać e-maila. Sprawdź, czy adres jest poprawny.",
+      );
     }
-  }
+  };
 
   return (
     <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
@@ -32,12 +37,12 @@ export default function LoginPage() {
           className="mx-auto h-100 w-auto"
         />
         <h2 className="mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900">
-          Zaloguj się do panenu administracyjnego
+          Resteowanie hasła do panenu administracyjnego
         </h2>
       </div>
 
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-        <form onSubmit={handleLogin} className="space-y-6">
+        <form onSubmit={handlePasswordReset} className="space-y-6">
           <div>
             <label
               htmlFor="email"
@@ -60,46 +65,36 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <div className="flex items-center justify-between">
-              <label
-                htmlFor="password"
-                className="block text-sm/6 font-medium text-gray-900"
-              >
-                Hasło
-              </label>
-              <div className="text-sm">
-                <Link
-                  className="font-semibold text-indigo-600 hover:text-indigo-500"
-                  href="/reset-password"
-                >
-                  Zapomniałeś hasła?
-                </Link>
-              </div>
-            </div>
-            <div className="mt-2">
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                autoComplete="current-password"
-                className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div>
             <button
               type="submit"
               className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             >
-              Zaloguj się
+              Wyślij link do resetowania hasła
             </button>
           </div>
         </form>
+        {message && (
+            <div className="rounded-md bg-green-50 p-4 mt-2">
+              <div className="flex">
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-green-800">{message}</h3>
+                </div>
+              </div>
+            </div>
+        )}
+
+        {error && (
+            <div className="rounded-md bg-red-50 p-4 mt-2">
+              <div className="flex">
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">{error}</h3>
+                </div>
+              </div>
+            </div>
+        )}
       </div>
+
+
     </div>
   );
 }
